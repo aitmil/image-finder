@@ -1,25 +1,26 @@
-import { useState, useEffect } from "react";
-import "modern-normalize";
-import ErrorMessage from "../ErrorMessage/ErrorMessage";
-import ImageGallery from "../ImageGallery/ImageGallery";
-import ImageModal from "../ImageModal/ImageModal";
-import LoadMoreBtn from "../LoadMoreBtn/LoadMoreBtn";
-import Loader from "../Loader/Loader";
-import SearchBar from "../SearchBar/SearchBar";
-import { getImages } from "../../image-api";
-import css from "./App.module.css";
+import { useState, useEffect } from 'react';
+import 'modern-normalize';
+import { ErrorMessage } from '../ErrorMessage/ErrorMessage';
+import { ImageGallery } from '../ImageGallery/ImageGallery';
+import { ImageModal } from '../ImageModal/ImageModal';
+import { LoadMoreBtn } from '../LoadMoreBtn/LoadMoreBtn';
+import { Loader } from '../Loader/Loader';
+import { SearchBar } from '../SearchBar/SearchBar';
+import { getImages } from '../../api/image-api';
+import { Image } from '../../types';
+import css from './App.module.css';
 
 export default function App() {
-  const [images, setImages] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [page, setPage] = useState(1);
-  const [showBtn, setShowBtn] = useState(false);
-  const [isError, setIsError] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [modalIsOpen, setModalIsOpen] = useState(false);
-  const [selectedImageUrl, setImageUrl] = useState("");
-  const [selectedImageAlt, setImageAlt] = useState("");
-  const [selectedImageAuthor, setImageAuthor] = useState("");
+  const [images, setImages] = useState<Image[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [page, setPage] = useState<number>(1);
+  const [showBtn, setShowBtn] = useState<boolean>(false);
+  const [isError, setIsError] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [modalIsOpen, setModalIsOpen] = useState<boolean>(false);
+  const [selectedImageUrl, setImageUrl] = useState<string>('');
+  const [selectedImageAlt, setImageAlt] = useState<string>('');
+  const [selectedImageAuthor, setImageAuthor] = useState<string>('');
 
   useEffect(() => {
     async function fetchImages() {
@@ -27,7 +28,7 @@ export default function App() {
       setIsLoading(true);
       try {
         const { results, total_pages } = await getImages(searchQuery, page);
-        setImages((prevState) => [...prevState, ...results]);
+        setImages(prevState => [...prevState, ...results]);
         setShowBtn(total_pages !== page);
       } catch {
         setIsError(true);
@@ -40,29 +41,40 @@ export default function App() {
     }
   }, [searchQuery, page]);
 
-  const handleSearch = async (query) => {
+  const handleSearch = async (query: string): Promise<void> => {
     setSearchQuery(query);
     setPage(1);
     setImages([]);
   };
 
-  const handleLoadMore = async () => setPage(page + 1);
+  const handleLoadMore = async (): Promise<void> => setPage(page + 1);
 
-  const handleOpenModal = (imageUrl, imageAlt, imageAuthor) => {
+  const handleOpenModal = (
+    imageUrl: string,
+    imageAlt: string,
+    imageAuthor: string
+  ): void => {
     setImageUrl(imageUrl);
-    setImageAlt(() => (imageAlt !== null ? imageAlt : `${searchQuery} image`));
-    setImageAuthor(() => (imageAuthor !== null ? imageAuthor : "Unknown"));
+    setImageAlt((): string =>
+      typeof imageAlt === 'string' ? imageAlt : `${searchQuery} image`
+    );
+    setImageAuthor((): string =>
+      typeof imageAuthor === 'string' ? imageAuthor : 'Unknown'
+    );
     setModalIsOpen(true);
   };
 
-  const handleCloseModal = () => setModalIsOpen(false);
+  const handleCloseModal = (): void => setModalIsOpen(false);
 
   return (
     <div className={css.container}>
       <SearchBar onSubmit={handleSearch} />
       {isError && <ErrorMessage />}
       {images.length > 0 && (
-        <ImageGallery images={images} onImageClick={handleOpenModal} />
+        <ImageGallery
+          images={images}
+          onImageClick={handleOpenModal}
+        />
       )}
       {isLoading && <Loader />}
       {showBtn && images.length > 0 && !isLoading && (
